@@ -110,8 +110,8 @@ def keyword_search():
         workreader = csv.DictReader(csvfile, fieldnames=fieldnames)
         print('*** Search By Keyword ***:\n')
         keyword = input('Enter Word or Phrase to Search:\n' +
-                        'Hit Enter to Return\n')
-        if keyword != '':
+                        'Enter X to Return\n')
+        if keyword.lower() != 'x':
             count = 1
             found_keyword = []
             for row in workreader:
@@ -170,9 +170,9 @@ def create_entry():
     new_entry = []
     # date
     while True:
-        date = input('Hit Enter to Return\nDate of the task\n' +
+        date = input('Enter X to Exit\nDate of the task\n' +
                      'Enter as DD/MM/YYYY: ')
-        if date == '':
+        if date.lower() == 'x':
             return False
         if check_format(date) is True:
             if check_date(date) is True:
@@ -186,8 +186,8 @@ def create_entry():
     clr_scr()
     while True:
         title = input("What is the name of the log?\n" +
-                      "Hit Enter to Return\n")
-        if title == '':
+                      "Enter X to Exit\n")
+        if title.lower() == 'x':
             return False
         invalid_char = re.search(',', title)
         if invalid_char is not None:
@@ -216,10 +216,11 @@ def create_entry():
     #time_spent
     while True:
         try:
-            time_spent = int(input("How long in minutes is the task?\n" +
-                                   "Hit Enter to Return\n"))
-            if time_spent == '':
+            time_spent = input("How long in minutes is the task?\n" +
+                               "Enter X to Exit\n")
+            if time_spent.lower() == 'x':
                 return False
+            time_spent = int(time_spent)
             if time_spent < 0:
                 print("Number must be a postive integer")
             else:
@@ -229,10 +230,15 @@ def create_entry():
             print("Please enter a valid number in minutes. ")
     #notes
     clr_scr()
-    notes = input("Please add notes to this log if needed.\n")
-    if re.search(',', notes) is True:
+    notes = input("Please add notes to this log if needed.\n" +
+                  "Enter X to Exit\n")
+    invalid_char = re.search(',', notes)
+    if notes.lower() == 'x':
+        return False
+    if invalid_char is not None:
         print('Invalid Special Character Used\n' +
               'Hit Enter to Return\n')
+        input()
         return False
     new_entry.append(notes)
     with open('work_log.csv', 'a') as csvfile:
@@ -283,9 +289,9 @@ def change_value(value):
             if choice == 1:
                 clr_scr()
                 print(f'Enter a new value for {value[choice-1]}\n' +
-                      'Hit Enter to Exit Without Changes\n')
+                      'Enter X to Exit Without Changes\n')
                 new_date = input("Date of the task\nEnter as DD/MM/YYYY: ")
-                if new_date == '':
+                if new_date.lower() == 'x':
                     return False
                 elif check_format(new_date) is True:
                     if check_date(new_date) is True:
@@ -298,13 +304,13 @@ def change_value(value):
             if choice == 2:
                 clr_scr()
                 print(f'Enter a new Job Title for -- {value[choice-1]}\n' +
-                      'Hit Enter to Exit to Exit Without Changes\n')
+                      'Enter X to Exit to Exit Without Changes\n')
                 new_title = input("New Job Title\n")
                 if re.search(',', new_title) is True:
                     print('Invalid Special Character Used\n' +
                           'Hit Enter to Return\n')
                     return False
-                if new_title == '':
+                if new_title.lower() == 'x':
                     return False
                 else:
                     with open('work_log.csv', 'r') as csvfile:
@@ -328,10 +334,10 @@ def change_value(value):
             if choice == 3:
                 clr_scr()
                 print(f'Enter Time Spent for {value[1]}\n' +
-                      'Hit Enter to Exit Without Changes\n')
+                      'Enter X to Exit Without Changes\n')
                 while True:
                     new_time_spent = input("New Duration of Log: ")
-                    if new_time_spent == '':
+                    if new_time_spent.lower() == 'x':
                         return False
                     try:
                         new_time_spent = int(new_time_spent)
@@ -345,13 +351,13 @@ def change_value(value):
             if choice == 4:
                 clr_scr()
                 print(f'Enter New Notes for {value[1]}\n' +
-                      'Hit Enter to Exit Without Changes\n')
+                      'Enter X to Exit Without Changes\n')
                 new_notes = input("New Notes for Log: ")
                 if re.search(',', new_notes) is True:
                     print('Invalid Special Character Used\n' +
                           'Hit Enter to Return\n')
                     return False
-                if new_notes == '':
+                if new_notes.lower() == 'x':
                     return False
                 else:
                     new_line['notes'] = new_notes
@@ -417,9 +423,9 @@ def filter_date():
         fieldnames = ['date', 'job_title', 'time_spent', 'notes']
         workreader = csv.DictReader(csvfile, fieldnames=fieldnames)
         while True:
-            print('Hit Enter to Return\n')
+            print('Enter X to Exit\n')
             date = input("Enter Filter Date DD/MM/YYYY: ")
-            if date == '':
+            if date.lower() == 'x':
                 return False
             if check_format(date) is True:
                 if check_date(date) is True:
@@ -449,8 +455,8 @@ def filter_job():
         fieldnames = ['date', 'job_title', 'time_spent', 'notes']
         workreader = csv.DictReader(csvfile, fieldnames=fieldnames)
         while True:
-            job = input("\nEnter the Job Title - Hit Enter to Return:\n")
-            if job == '':
+            job = input("\nEnter the Job Title - Enter X to Exit:\n")
+            if job.lower() == 'x':
                 return False
             values = []
             for row in workreader:
@@ -468,9 +474,9 @@ def range_value():
     Date range function
     """
     while True:
-        print('Hit Enter to Return\n')
+        print('Enter X to Exit\n')
         range_entered = input("Please Enter Date DD/MM/YYYY:\n")
-        if range_entered == '':
+        if range_entered.lower() == 'x':
             return range_entered
         else:
             if check_format(range_entered) is True:
@@ -531,7 +537,7 @@ def list_control(values):
               f"Job Title: {values[count][1]}\n"
               f"Length of Time: {values[count][2]}\n"
               f"Notes: {values[count][3]}\n"
-              "Hit Enter to Return" +
+              "Hit Enter to Exit" +
               " [C] to Change Value -- [D] to Delete Entry\n")
         control = input()
         if control.lower() == 'c':

@@ -10,14 +10,25 @@ import csv
 import datetime
 from datetime import timedelta
 import os
+import platform
 import re
+
+def user_sys():
+    """
+    Detection of users operating system.
+    """
+    user = platform.system()
+    return user
 
 def clr_scr():
     """
-    Function to clear screen.
+    Function to clear screen based on operating system.
     """
-    os.system('cls')
-
+    clr_method = user_sys()
+    if clr_method == 'Linux':
+        os.system('clear')
+    else:
+        os.system('cls')
 
 def work_log():
     """
@@ -46,26 +57,12 @@ def work_log():
             if search_type == 1:
                 filter_date()
             if search_type == 2:
-                clr_scr()
-                print('Search by Range - Start Date:\n')
-                start_range = range_value()
-                clr_scr()
-                print('Search by Range - End Date:\n')
-                end_range = range_value()
-                clr_scr()
-                values = []
-                with open('work_log.csv', 'r', newline="") as csvfile:
-                    fieldnames = ['date', 'job_title', 'time_spent', 'notes']
-                    workreader = csv.DictReader(csvfile, fieldnames=fieldnames)
-                    for row in workreader:
-                        if row['date'] == 'date':
-                            pass
-                        elif (datetime.datetime.strptime(row['date'], '%d/%m/%Y')
-                              in date_range(start_range, end_range)):
-                            values.append(list(row.values()))
-                csvfile.close()
-                values = sort_dates(values)
-                list_control(values)
+                values = range_search()
+                if values is False:
+                    pass
+                else:
+                    values = sort_dates(values)
+                    list_control(values)
 
             elif search_type == 3:
                 clr_scr()
@@ -75,7 +72,8 @@ def work_log():
             elif search_type == 4:
                 clr_scr()
                 values = keyword_search()
-                list_control(values)
+                if values is not None:
+                    list_control(values)
 
 def menu(options):
     """
@@ -111,19 +109,21 @@ def keyword_search():
         fieldnames = ['date', 'job_title', 'time_spent', 'notes']
         workreader = csv.DictReader(csvfile, fieldnames=fieldnames)
         print('*** Search By Keyword ***:\n')
-        keyword = input('Enter Word or Phrase to Search:\n')
-        count = 1
-        found_keyword = []
-        for row in workreader:
-            if count == 1:
-                count += 1
-            else:
-                if (re.search(keyword.lower(), row['job_title'].lower())
-                        or re.search(keyword.lower(), row['notes'].lower())
-                        != None):
-                    found_keyword.append(list(row.values()))
-        csvfile.close()
-        return found_keyword
+        keyword = input('Enter Word or Phrase to Search:\n' +
+                        'Hit Enter to Return\n')
+        if keyword != '':
+            count = 1
+            found_keyword = []
+            for row in workreader:
+                if count == 1:
+                    count += 1
+                else:
+                    if (re.search(keyword.lower(), row['job_title'].lower())
+                            or re.search(keyword.lower(), row['notes'].lower())
+                            != None):
+                        found_keyword.append(list(row.values()))
+            csvfile.close()
+            return found_keyword
 
 def sort_dates(value):
     """
@@ -145,7 +145,6 @@ def sort_dates(value):
         sorted_dates.append(item)
         count += 1
     return sorted_dates
-
 
 def create_csv():
     """
@@ -171,7 +170,10 @@ def create_entry():
     new_entry = []
     # date
     while True:
-        date = input("Date of the task\nEnter as DD/MM/YYYY: ")
+        date = input('Hit Enter to Return\nDate of the task\n' +
+                     'Enter as DD/MM/YYYY: ')
+        if date == '':
+            return False
         if check_format(date) is True:
             if check_date(date) is True:
                 new_entry.append(date)
@@ -183,7 +185,16 @@ def create_entry():
     #title
     clr_scr()
     while True:
-        title = input("What is the name of the log? ")
+        title = input("What is the name of the log?\n" +
+                      "Hit Enter to Return\n")
+        if title == '':
+            return False
+        invalid_char = re.search(',', title)
+        if invalid_char is not None:
+            print('Invalid Special Character Used\n' +
+                  'Hit Enter to Return\n')
+            input()
+            return False
         if title != '':
             new_entry.append(title)
             clr_scr()
@@ -205,7 +216,10 @@ def create_entry():
     #time_spent
     while True:
         try:
-            time_spent = int(input("How long in minutes is the task? "))
+            time_spent = int(input("How long in minutes is the task?\n" +
+                                   "Hit Enter to Return\n"))
+            if time_spent == '':
+                return False
             if time_spent < 0:
                 print("Number must be a postive integer")
             else:
@@ -216,6 +230,10 @@ def create_entry():
     #notes
     clr_scr()
     notes = input("Please add notes to this log if needed.\n")
+    if re.search(',', notes) is True:
+        print('Invalid Special Character Used\n' +
+              'Hit Enter to Return\n')
+        return False
     new_entry.append(notes)
     with open('work_log.csv', 'a') as csvfile:
         fieldnames = ['date', 'job_title', 'time_spent', 'notes']
@@ -282,6 +300,10 @@ def change_value(value):
                 print(f'Enter a new Job Title for -- {value[choice-1]}\n' +
                       'Hit Enter to Exit to Exit Without Changes\n')
                 new_title = input("New Job Title\n")
+                if re.search(',', new_title) is True:
+                    print('Invalid Special Character Used\n' +
+                          'Hit Enter to Return\n')
+                    return False
                 if new_title == '':
                     return False
                 else:
@@ -325,6 +347,10 @@ def change_value(value):
                 print(f'Enter New Notes for {value[1]}\n' +
                       'Hit Enter to Exit Without Changes\n')
                 new_notes = input("New Notes for Log: ")
+                if re.search(',', new_notes) is True:
+                    print('Invalid Special Character Used\n' +
+                          'Hit Enter to Return\n')
+                    return False
                 if new_notes == '':
                     return False
                 else:
@@ -364,7 +390,6 @@ def change_value(value):
             os.rename('work_log_temp.csv', 'work_log.csv')
             return False
 
-
 def check_format(date):
     """
     Verification of date format entered.
@@ -372,7 +397,6 @@ def check_format(date):
     check_input = r"\d\d/\d\d/\d{4}"
     correct = bool(re.match(check_input, date))
     return correct
-
 
 def check_date(date):
     """
@@ -384,7 +408,6 @@ def check_date(date):
     except ValueError:
         return False
 
-
 def filter_date():
     """
     Function to obtain date from user.
@@ -394,7 +417,10 @@ def filter_date():
         fieldnames = ['date', 'job_title', 'time_spent', 'notes']
         workreader = csv.DictReader(csvfile, fieldnames=fieldnames)
         while True:
+            print('Hit Enter to Return\n')
             date = input("Enter Filter Date DD/MM/YYYY: ")
+            if date == '':
+                return False
             if check_format(date) is True:
                 if check_date(date) is True:
                     values = []
@@ -414,7 +440,6 @@ def filter_date():
 
             else:
                 print("Please use the proper format DD/MM/YYYY: ")
-
 
 def filter_job():
     """
@@ -438,24 +463,59 @@ def filter_job():
             list_control(values)
             return False
 
-
-
 def range_value():
     """
     Date range function
     """
     while True:
+        print('Hit Enter to Return\n')
         range_entered = input("Please Enter Date DD/MM/YYYY:\n")
-        if check_format(range_entered) is True:
-            if check_date(range_entered) is True:
-                range_entered = datetime.datetime.strptime(range_entered,
-                                                           '%d/%m/%Y')
-                return range_entered
-            else:
-                print("Please enter a valid date.")
+        if range_entered == '':
+            return range_entered
         else:
-            print("Please use the requested format DD/MM/YYYY. ")
+            if check_format(range_entered) is True:
+                if check_date(range_entered) is True:
+                    range_entered = datetime.datetime.strptime(range_entered,
+                                                               '%d/%m/%Y')
+                    return range_entered
+                else:
+                    print("Please enter a valid date.")
+            else:
+                print("Please use the requested format DD/MM/YYYY. ")
 
+def range_search():
+    """
+    Function to query csv file for logs within the date range.
+    """
+    while True:
+        clr_scr()
+        print('Search by Range - Start Date:\n')
+        start_range = range_value()
+        if start_range == '':
+            return False
+        clr_scr()
+        print('Search by Range - End Date:\n')
+        end_range = range_value()
+        if end_range == '':
+            return False
+        if start_range > end_range:
+            print('Start Date is Later than End Date\n' +
+                  'Hit Enter to Return\n')
+            input()
+            return False
+        clr_scr()
+        values = []
+        with open('work_log.csv', 'r', newline="") as csvfile:
+            fieldnames = ['date', 'job_title', 'time_spent', 'notes']
+            workreader = csv.DictReader(csvfile, fieldnames=fieldnames)
+            for row in workreader:
+                if row['date'] == 'date':
+                    pass
+                elif (datetime.datetime.strptime(row['date'], '%d/%m/%Y')
+                      in date_range(start_range, end_range)):
+                    values.append(list(row.values()))
+            csvfile.close()
+        return values
 
 def list_control(values):
     """
@@ -550,7 +610,6 @@ def list_control(values):
                 else:
                     pass
     clr_scr()
-
 
 def delete_entry(values):
     """

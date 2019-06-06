@@ -43,7 +43,8 @@ def work_log():
         """)
         main_menu = ("Create New Entry", "Search Entries", "QUIT")
         search_options = ("Exact Date", "Range of Dates", "Exact Job Title",
-                          "Keyword Search", "Previous Menu", "QUIT")
+                          "Keyword Search", "Time Spent", "Previous Menu",
+                          "QUIT")
         choice = menu(main_menu)
         clr_scr()
         if choice == 1:
@@ -72,6 +73,11 @@ def work_log():
             elif search_type == 4:
                 clr_scr()
                 values = keyword_search()
+                if values is not None:
+                    list_control(values)
+            elif search_type == 5:
+                clr_scr()
+                values = time_search()
                 if values is not None:
                     list_control(values)
 
@@ -108,7 +114,7 @@ def keyword_search():
     with open('work_log.csv', 'r', newline="") as csvfile:
         fieldnames = ['date', 'job_title', 'time_spent', 'notes']
         workreader = csv.DictReader(csvfile, fieldnames=fieldnames)
-        print('*** Search By Keyword ***:\n')
+        print('*** Search By Keyword ***\n')
         keyword = input('Enter Word or Phrase to Search:\n' +
                         'Enter X to Return\n')
         if keyword.lower() != 'x':
@@ -522,6 +528,33 @@ def range_search():
                     values.append(list(row.values()))
             csvfile.close()
         return values
+
+def time_search():
+    """
+    Function to query csv by time Spent
+    """
+    clr_scr()
+    with open('work_log.csv', 'r', newline="") as csvfile:
+        fieldnames = ['date', 'job_title', 'time_spent', 'notes']
+        workreader = csv.DictReader(csvfile, fieldnames=fieldnames)
+        print('*** Search By Time Spent ***\n')
+        time_query = input('Enter Time Spent to Search Log:\n' +
+                           'Enter X to Return\n')
+        if time_query.lower() == 'x':
+            return None
+        elif time_query.lower() != 'x':
+            count = 1
+            found_time = []
+            for row in workreader:
+                if count == 1:
+                    count += 1
+                else:
+                    if re.search(str(time_query), row['time_spent']) != None:
+                        found_time.append(list(row.values()))
+
+            csvfile.close()
+            return found_time
+
 
 def list_control(values):
     """
